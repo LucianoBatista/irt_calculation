@@ -1,0 +1,274 @@
+---
+title: "IRT analysis"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# Libs
+
+```{r}
+library(ltm)
+library(irtoys)
+library(mirt)
+library(CTT)
+library(tidyverse)
+library(patchwork)
+```
+
+
+
+# Importing data
+
+This data have duplicated information!
+
+```{r}
+mydata <- read_csv("data/example.csv") 
+
+mydata <- mydata %>% 
+  dplyr::select(-starts_with("X"))
+```
+
+
+# Modeling
+
+Params:
+
+- **data**: *data*
+- **model**: *Type of model to estimate. 1 means a unidimensional model*
+- **itemtype**: *Type of items to be modeled, ex: Rasch, 2PL, 3PL ...*
+
+For more information about params see the docs `?mirt`
+
+```{r}
+mymodel <- mirt(
+  mydata, 
+  1,          
+  itemtype = '3PL')
+
+```
+
+## Inspecting items
+
+Plot for every single item and yours approximation.
+
+```{r}
+for(i in 1:length(mydata)){
+  ItemPlot <- itemfit(
+    mymodel, 
+    group.bins=15,
+    empirical.plot = i,
+    empirical.CI = .95,
+    method = 'ML'
+  )
+  
+  print(ItemPlot)
+
+}
+
+```
+
+
+## Calculating latent trace for our case
+
+```{r}
+latent_answers <- as.vector(fscores(mymodel))
+```
+
+## IRT parameters
+
+```{r}
+irt_coefs <- coef(mymodel, simplify = T, IRTpars =T)
+
+# plotting irt params 
+plot(irt_coefs$items[,1],
+     irt_coefs$items[,2],
+     xlab = "Item discrimination",
+     ylab = "Item difficulty")
+
+```
+
+Using MIRT output for the coefficients to calculate the scores
+
+```{r}
+novo_score <- score.transform(
+  latent_answers, mu.new = 500, sd.new = 100,
+  normalize = FALSE
+)
+
+```
+
+
+## Analysis by student
+
+```{r}
+# data transformations
+my_data_column_names <- names(mydata)
+
+irt_coefs_tbl <- irt_coefs$items %>% 
+  as_tibble()
+
+student_vect = 1:165
+mydata["student_code"] = student_vect
+irt_coefs_tbl["item"] = my_data_column_names
+
+mydata_longer <- mydata %>% 
+  pivot_longer(cols = -student_code, names_to = "items", values_to = "count")
+
+score_14_students <- novo_score[1]$new.scores[1:14]
+
+scores_tbl <- enframe(score_14_students) %>% 
+  rename(student_id = name,
+         score = value) %>% 
+  mutate(student_id = as_factor(student_id))
+
+# not using this
+# mydata_joined <- mydata_longer %>% 
+#   dplyr::left_join(irt_coefs_tbl, by = c("items" = "item"))
+# 
+# mydata_joined_longer <- mydata_joined %>% 
+#   pivot_longer(cols = c(a, b, g), names_to = "params", values_to = "values") %>% 
+#   dplyr::select(-u)
+# 
+# mydata_longer %>% 
+#   filter(student_code %in% c(1:14)) %>% 
+#   group_by(student_code) %>% 
+#   summarise(total_corrects = sum(count))
+
+
+```
+
+### Viz
+
+```{r}
+# adjust color and axis
+p1 <- mydata_longer %>% 
+  filter(student_code %in% c(1:14)) %>% 
+  mutate(items = as_factor(items)) %>% 
+  ggplot(aes(x = items,
+             y = student_code,
+             fill = count == 1)) +
+  geom_raster() +
+  scale_fill_manual(values = c("#e0e0e0", "orange")) +
+  scale_y_discrete(name="Students", limits=c(1:14)) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle=45)
+  )
+
+
+p2 <- scores_tbl %>% 
+  ggplot(aes(x = score,
+             y = student_id %>% fct_reorder(score))) + 
+  geom_bar(stat="identity", width=.7, fill="orange") +
+  labs(
+    title = "Classfication by score",
+    y = "Students IDs",
+    x = "Scores"
+  ) +
+  theme_minimal() 
+
+
+p3 <- mydata_longer %>% 
+  filter(student_code %in% c(1:14)) %>% 
+  group_by(student_code) %>% 
+  summarise(total_corrects = sum(count)) %>% 
+  ungroup() %>% 
+  mutate(student_code = as_factor(student_code)) %>% 
+  ggplot(aes(x = total_corrects,
+             y = student_code %>% fct_reorder(total_corrects))) +
+  geom_bar(stat="identity", width = .7, fill="orange") +
+  labs(
+    x = "Quantity of Correct Answer",
+    y = "",
+    title = "Classification by correct answers"
+  ) +
+  theme_minimal()
+
+p4 <- irt_coefs_tbl %>% 
+  select(-c(u, a, g)) %>%
+  mutate(item = as_factor(item)) %>% 
+  filter(item != "item_3") %>% 
+  ggplot(aes(x = b,
+             y = item %>% fct_reorder(b))) +
+  geom_bar(stat="identity", width = .7, fill = "orange") +
+  theme_minimal() +
+  labs(
+    x = "b = Difficulty",
+    y = "Items",
+    title = "Items by order of difficulty"
+  )
+
+p1 / (p2 | p3) / p4
+
+
+```
+
+## Others viz
+
+```{r}
+# ICC for each item
+plot(mymodel, type = 'trace')
+# Item information, separate plots
+plot(mymodel, type = 'infotrace')
+# Item information, joint plot
+plot(mymodel, type = 'infotrace', facet_items = F)
+# Plots, test level
+# Test information curve 
+plot(mymodel, type = 'info')
+# Test information curve with conditional standard error
+plot(mymodel, type = 'infoSE')
+
+```
+
+
+
+```{r}
+# not using this
+# irt_coefs_tbl %>% 
+#   select(-u) %>% 
+#   pivot_longer(cols = c(a, b, g), names_to = "params", values_to = "values") %>% 
+#   mutate(item = as_factor(item),
+#          params = as_factor(params)) %>% 
+#   ggplot(aes(x = item,
+#              y = values,
+#              fill = params)) +
+#   geom_bar(stat="identity", width=.8, position = "dodge")
+# 
+# 
+# mydata_joined_longer %>% 
+#   filter(student_code == "1") %>% 
+#   group_by(items) %>% 
+#   summarise(total = sum(count)) %>% 
+#   ungroup() %>% 
+#   ggplot(aes(
+#     x = total,
+#     y = items
+#   )) +
+#   geom_col()
+# 
+# mydata_longer %>% 
+#   group_by(items) %>% 
+#   summarise(total = sum(count)) %>% 
+#   ggplot(aes(
+#     x = items,
+#     y = total
+#   )) +
+#   geom_col()
+#   
+# mydata_longer %>% 
+#   group_by(items) %>% 
+#   summarise(total = sum(count)) %>% 
+#   bind_cols(irt_coefs_tbl) %>% 
+#   ggplot(aes(
+#     x = items %>% fct_reorder(total),
+#     y = total,
+#     fill = b
+#   )) +
+#   geom_col() +
+#   scale_fill_viridis_c() +
+#   coord_flip() +
+#   theme_minimal()
+
+```
+
