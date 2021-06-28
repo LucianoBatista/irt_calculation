@@ -14,6 +14,7 @@ library(mirt)
 library(CTT)
 library(tidyverse)
 library(patchwork)
+library(tidymodels)
 ```
 
 
@@ -23,10 +24,16 @@ library(patchwork)
 This data have duplicated information!
 
 ```{r}
-mydata <- read_csv("data/example.csv") 
+mydata <- read_csv("data/example5_justo19.csv") 
 
 mydata <- mydata %>% 
   dplyr::select(-starts_with("X"))
+
+mydata_samples <- mydata[sample(nrow(mydata),500,replace=T),]
+
+mydata <- mydata %>% 
+  bind_rows(mydata_samples)
+
 ```
 
 
@@ -108,14 +115,16 @@ my_data_column_names <- names(mydata)
 irt_coefs_tbl <- irt_coefs$items %>% 
   as_tibble()
 
-student_vect = 1:165
+max_n = dim(mydata[][1])[1]
+
+student_vect = 1:max_n
 mydata["student_code"] = student_vect
 irt_coefs_tbl["item"] = my_data_column_names
 
 mydata_longer <- mydata %>% 
   pivot_longer(cols = -student_code, names_to = "items", values_to = "count")
 
-score_14_students <- novo_score[1]$new.scores[1:14]
+score_14_students <- novo_score[1]$new.scores[1:19]
 
 scores_tbl <- enframe(score_14_students) %>% 
   rename(student_id = name,
@@ -143,7 +152,7 @@ scores_tbl <- enframe(score_14_students) %>%
 ```{r}
 # adjust color and axis
 p1 <- mydata_longer %>% 
-  filter(student_code %in% c(1:14)) %>% 
+  filter(student_code %in% c(1:19)) %>% 
   mutate(items = as_factor(items)) %>% 
   ggplot(aes(x = items,
              y = student_code,
@@ -170,7 +179,7 @@ p2 <- scores_tbl %>%
 
 
 p3 <- mydata_longer %>% 
-  filter(student_code %in% c(1:14)) %>% 
+  filter(student_code %in% c(1:19)) %>% 
   group_by(student_code) %>% 
   summarise(total_corrects = sum(count)) %>% 
   ungroup() %>% 
@@ -188,7 +197,7 @@ p3 <- mydata_longer %>%
 p4 <- irt_coefs_tbl %>% 
   select(-c(u, a, g)) %>%
   mutate(item = as_factor(item)) %>% 
-  filter(item != "item_3") %>% 
+  # filter(item != "item_3") %>% 
   ggplot(aes(x = b,
              y = item %>% fct_reorder(b))) +
   geom_bar(stat="identity", width = .7, fill = "orange") +
