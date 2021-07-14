@@ -14,38 +14,131 @@ library(mirt)
 library(CTT)
 library(tidyverse)
 library(patchwork)
-library(tidymodels)
+```
+
+
+# Importando o dado
+
+Dado coletado de um simulado que possui apenas 19 alunos. Realizamos uma reamostragem desse conjunto de dados para obter um pouco mais de confiabilidade dos resultados.
+
+```{r}
+# dados de todos os simulados
+# 90 items for this data
+# ciências da natureza e matemática
+day_1_nature_math_items_str <- sprintf("item_%s", seq(1:90))
+day_2_nature_math_items_str <- sprintf("item_%s", seq(1:90))
+
+day_1_nature_math_raw_tbl <- read_csv("data/enem_dia1_ciencias_natureza_matematica.csv")
+day_2_nature_math_raw_tbl <- read_csv("data/enem_dia2_ciencias_natureza_matematica.csv")
+
+day_1_nature_math_tbl <- day_1_nature_math_raw_tbl %>% 
+  separate(results, into = day_1_nature_math_items_str, sep = ",") %>% 
+  rename(student_code = systemUserId,
+         activity_code = examId) %>% 
+  mutate_all(funs(type.convert(as.integer(.))))
+
+day_2_nature_math_tbl <- day_2_nature_math_raw_tbl %>% 
+  separate(results, into = day_2_nature_math_items_str, sep = ",") %>% 
+  rename(student_code = systemUserId,
+         activity_code = examId) %>% 
+  mutate_all(funs(type.convert(as.integer(.))))
+
+# humanas
+day_1_lenguages_humans_science_str <- sprintf("item_%s", seq(1:95))
+day_1_lenguages_humans_science_2_str <- sprintf("item_%s", seq(1:95))
+day_1_lenguages_humans_science_3_str <- sprintf("item_%s", seq(1:95))
+day_1_lenguages_humans_science_4_str <- sprintf("item_%s", seq(1:95))
+day_1_lenguages_humans_science_5_str <- sprintf("item_%s", seq(1:95))
+day_1_lenguages_humans_science_6_str <- sprintf("item_%s", seq(1:95))
+
+day_1_lenguages_humans_science_raw_tbl <- read_csv("data/enem_dia1_linguagem_ciencias_humanas.csv")
+day_1_lenguages_humans_science_2_raw_tbl <- read_csv("data/enem_dia1_linguagem_ciencias_humanas_2.csv")
+day_1_lenguages_humans_science_3_raw_tbl <- read_csv("data/enem_dia1_linguagem_ciencias_humanas_3.csv")
+day_1_lenguages_humans_science_4_raw_tbl <- read_csv("data/enem_dia1_linguagem_ciencias_humanas_4.csv")
+day_1_lenguages_humans_science_5_raw_tbl <- read_csv("data/enem_dia1_linguagem_ciencias_humanas_5.csv")
+day_1_lenguages_humans_science_6_raw_tbl <- read_csv("data/enem_dia1_linguagem_ciencias_humanas_6.csv")
+
+
+day_1_lenguages_humans_science_tbl <- day_1_lenguages_humans_science_raw_tbl %>% 
+  separate(results, into = day_1_lenguages_humans_science_str, sep = ",") %>% 
+  rename(student_code = systemUserId,
+         activity_code = examId) %>% 
+  mutate_all(funs(type.convert(as.integer(.))))
+  
+day_1_lenguages_humans_science_2_tbl <- day_1_lenguages_humans_science_2_raw_tbl %>% 
+  separate(results, into = day_1_lenguages_humans_science_2_str, sep = ",") %>% 
+  rename(student_code = systemUserId,
+         activity_code = examId) %>% 
+  mutate_all(funs(type.convert(as.integer(.))))
+
+day_1_lenguages_humans_science_3_tbl <- day_1_lenguages_humans_science_3_raw_tbl %>% 
+  separate(results, into = day_1_lenguages_humans_science_3_str, sep = ",") %>% 
+  rename(student_code = systemUserId,
+         activity_code = examId)%>% 
+  mutate_all(funs(type.convert(as.integer(.))))
+
+day_1_lenguages_humans_science_4_tbl <- day_1_lenguages_humans_science_4_raw_tbl %>% 
+  separate(results, into = day_1_lenguages_humans_science_4_str, sep = ",") %>% 
+  rename(student_code = systemUserId,
+         activity_code = examId)%>% 
+  mutate_all(funs(type.convert(as.integer(.))))
+
+day_1_lenguages_humans_science_5_tbl <- day_1_lenguages_humans_science_5_raw_tbl %>% 
+  separate(results, into = day_1_lenguages_humans_science_5_str, sep = ",") %>% 
+  rename(student_code = systemUserId,
+         activity_code = examId)%>% 
+  mutate_all(funs(type.convert(as.integer(.))))
+
+day_1_lenguages_humans_science_6_tbl <- day_1_lenguages_humans_science_6_raw_tbl %>% 
+  separate(results, into = day_1_lenguages_humans_science_6_str, sep = ",") %>% 
+  rename(student_code = systemUserId,
+         activity_code = examId)%>% 
+  mutate_all(funs(type.convert(as.integer(.))))
+
+
+mydata <- day_2_nature_math_tbl %>% 
+  dplyr::select(starts_with("item"))
+student_vect <- day_2_nature_math_tbl %>% 
+  pluck(2)
+activity_code <- day_2_nature_math_tbl %>% 
+  pluck(1)
+
+```
+
+Exporting for the other script on python!
+
+```{r}
+mydata_processed <- day_1_lenguages_humans_science_6_tbl %>% 
+  pivot_longer(cols = starts_with("item"), names_to = "items", values_to = "answers") %>% 
+  mutate(item = items,
+         student_id = student_code) %>% 
+  select(activity_code, item, answers, student_id) %>% 
+  arrange(student_id)
+
+
+mydata_processed %>% 
+  write_csv("day_1_lenguages_humans_science_6_to_py.csv")
+
 ```
 
 
 
-# Importing data
-
-This data have duplicated information!
-
 ```{r}
-mydata <- read_csv("data/example5_justo19.csv") 
-
+mydata <- read_csv("data/enem_dia1_linguagem_ciencias_humanas.csv")
 mydata <- mydata %>% 
   dplyr::select(-starts_with("X"))
 
+# reamostragem
 mydata_samples <- mydata[sample(nrow(mydata),500,replace=T),]
-
-mydata <- mydata %>% 
+mydata <- mydata %>%
   bind_rows(mydata_samples)
 
 ```
 
 
-# Modeling
+# Modelagem
 
-Params:
-
-- **data**: *data*
-- **model**: *Type of model to estimate. 1 means a unidimensional model*
-- **itemtype**: *Type of items to be modeled, ex: Rasch, 2PL, 3PL ...*
-
-For more information about params see the docs `?mirt`
+Aplicação do modelo 3PL para estimação dos parâmetros.
 
 ```{r}
 mymodel <- mirt(
@@ -55,7 +148,9 @@ mymodel <- mirt(
 
 ```
 
-## Inspecting items
+Nem sempre observamos uma convergência dos parâmetros.
+
+## Inspecionando os items
 
 Plot for every single item and yours approximation.
 
@@ -76,22 +171,17 @@ for(i in 1:length(mydata)){
 ```
 
 
-## Calculating latent trace for our case
+## Calculando o traço latente do modelo
 
 ```{r}
 latent_answers <- as.vector(fscores(mymodel))
+
 ```
 
-## IRT parameters
+## Parâmetros do modelo
 
 ```{r}
 irt_coefs <- coef(mymodel, simplify = T, IRTpars =T)
-
-# plotting irt params 
-plot(irt_coefs$items[,1],
-     irt_coefs$items[,2],
-     xlab = "Item discrimination",
-     ylab = "Item difficulty")
 
 ```
 
@@ -106,7 +196,7 @@ novo_score <- score.transform(
 ```
 
 
-## Analysis by student
+## Análise
 
 ```{r}
 # data transformations
@@ -117,33 +207,26 @@ irt_coefs_tbl <- irt_coefs$items %>%
 
 max_n = dim(mydata[][1])[1]
 
-student_vect = 1:max_n
-mydata["student_code"] = student_vect
-irt_coefs_tbl["item"] = my_data_column_names
+# student_vect <- 1:max_n
+mydata["student_code"] <- student_vect
+irt_coefs_tbl["item"] <- my_data_column_names
 
 mydata_longer <- mydata %>% 
   pivot_longer(cols = -student_code, names_to = "items", values_to = "count")
 
-score_14_students <- novo_score[1]$new.scores[1:19]
+score_14_students <- novo_score[1]$new.scores[1:max_n]
 
 scores_tbl <- enframe(score_14_students) %>% 
   rename(student_id = name,
          score = value) %>% 
-  mutate(student_id = as_factor(student_id))
+  mutate(student_id = as_factor(student_vect))
 
-# not using this
-# mydata_joined <- mydata_longer %>% 
-#   dplyr::left_join(irt_coefs_tbl, by = c("items" = "item"))
-# 
-# mydata_joined_longer <- mydata_joined %>% 
-#   pivot_longer(cols = c(a, b, g), names_to = "params", values_to = "values") %>% 
-#   dplyr::select(-u)
-# 
-# mydata_longer %>% 
-#   filter(student_code %in% c(1:14)) %>% 
-#   group_by(student_code) %>% 
-#   summarise(total_corrects = sum(count))
-
+# scores_tbl to export
+file_name <- paste0(as.character(activity_code[1]), "_activiy.csv")
+scores_tbl %>% 
+  arrange(desc(score)) %>% 
+  bind_cols("activity_code" = activity_code) %>% 
+  write_csv(file_name)
 
 ```
 
@@ -159,7 +242,7 @@ p1 <- mydata_longer %>%
              fill = count == 1)) +
   geom_raster() +
   scale_fill_manual(values = c("#e0e0e0", "orange")) +
-  scale_y_discrete(name="Students", limits=c(1:14)) +
+  scale_y_discrete(name="Students", limits=c(1:19)) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle=45)
@@ -167,6 +250,9 @@ p1 <- mydata_longer %>%
 
 
 p2 <- scores_tbl %>% 
+  mutate(student_id = student_id %>% as_factor()) %>% 
+  arrange(desc(score)) %>% 
+  top_n(10) %>% 
   ggplot(aes(x = score,
              y = student_id %>% fct_reorder(score))) + 
   geom_bar(stat="identity", width=.7, fill="orange") +
@@ -179,10 +265,12 @@ p2 <- scores_tbl %>%
 
 
 p3 <- mydata_longer %>% 
-  filter(student_code %in% c(1:19)) %>% 
+  # filter(student_code %in% c(1:max_n)) %>% 
   group_by(student_code) %>% 
   summarise(total_corrects = sum(count)) %>% 
-  ungroup() %>% 
+  ungroup() %>%
+  arrange(desc(total_corrects)) %>% 
+  top_n(10) %>% 
   mutate(student_code = as_factor(student_code)) %>% 
   ggplot(aes(x = total_corrects,
              y = student_code %>% fct_reorder(total_corrects))) +
@@ -195,7 +283,7 @@ p3 <- mydata_longer %>%
   theme_minimal()
 
 p4 <- irt_coefs_tbl %>% 
-  select(-c(u, a, g)) %>%
+  dplyr::select(-c(u, a, g)) %>%
   mutate(item = as_factor(item)) %>% 
   # filter(item != "item_3") %>% 
   ggplot(aes(x = b,
@@ -208,7 +296,7 @@ p4 <- irt_coefs_tbl %>%
     title = "Items by order of difficulty"
   )
 
-p1 / (p2 | p3) / p4
+p2 | p3
 
 
 ```
@@ -227,57 +315,6 @@ plot(mymodel, type = 'infotrace', facet_items = F)
 plot(mymodel, type = 'info')
 # Test information curve with conditional standard error
 plot(mymodel, type = 'infoSE')
-
-```
-
-
-
-```{r}
-# not using this
-# irt_coefs_tbl %>% 
-#   select(-u) %>% 
-#   pivot_longer(cols = c(a, b, g), names_to = "params", values_to = "values") %>% 
-#   mutate(item = as_factor(item),
-#          params = as_factor(params)) %>% 
-#   ggplot(aes(x = item,
-#              y = values,
-#              fill = params)) +
-#   geom_bar(stat="identity", width=.8, position = "dodge")
-# 
-# 
-# mydata_joined_longer %>% 
-#   filter(student_code == "1") %>% 
-#   group_by(items) %>% 
-#   summarise(total = sum(count)) %>% 
-#   ungroup() %>% 
-#   ggplot(aes(
-#     x = total,
-#     y = items
-#   )) +
-#   geom_col()
-# 
-# mydata_longer %>% 
-#   group_by(items) %>% 
-#   summarise(total = sum(count)) %>% 
-#   ggplot(aes(
-#     x = items,
-#     y = total
-#   )) +
-#   geom_col()
-#   
-# mydata_longer %>% 
-#   group_by(items) %>% 
-#   summarise(total = sum(count)) %>% 
-#   bind_cols(irt_coefs_tbl) %>% 
-#   ggplot(aes(
-#     x = items %>% fct_reorder(total),
-#     y = total,
-#     fill = b
-#   )) +
-#   geom_col() +
-#   scale_fill_viridis_c() +
-#   coord_flip() +
-#   theme_minimal()
 
 ```
 

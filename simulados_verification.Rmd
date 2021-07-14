@@ -1,0 +1,37 @@
+---
+title: "simulados"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# Libs
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+items_str <- sprintf("item_%s", seq(1:90))
+day_1_nature_math_tbl <- read_csv("data/enem_dia1_ciencias_natureza_matematica.csv")
+day_1_nature_math_tbl %>% 
+  separate(results, into = items_str, sep = ",") %>% 
+  rename(student_code = systemUserId,
+         activity_code = examId)
+
+
+```
+
+
+```{r}
+items_str <- sprintf("item_%s", seq(1:90))
+
+
+results_str <- day_1_nature_math_tbl %>% 
+  pluck(3)
+
+stringr::word(results_str[1], start = 1, end = 1, sep = ",")
+
+```
+
