@@ -126,12 +126,16 @@ No entanto, tal parâmetro possui um peso pequeno no resultado final, ficando a 
 
 # Análise e Resultados
 
-Aqui iremos trazer uma análise para um case de um simulado realizado por um de nossos clientes. Foram 95 items e 2460 respondentes para esse simulado.
+Aqui iremos trazer uma análise para um case de um simulado realizado por um de nossos clientes. Foram 95 items e 2460 respondentes para esse simulado. Utilizando um serviço desenvolvido por mim e pelo Júlio, também desenvolvedor back-end, foi possível obter alguns resultados bem interessantes.
 
+tópicos da parte prática:
+
+- as curvas características
+- 
 
 # Libs
 
-```{r}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 library(ltm)
 library(irtoys)
 library(mirt)
@@ -141,7 +145,7 @@ library(patchwork)
 ```
 
 
-```{r}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 # dados de humanas
 day_1_lenguages_humans_science_str <- sprintf("item_%s", seq(1:95))
 day_1_lenguages_humans_science_raw_tbl <- read_csv("data/enem_dia1_linguagem_ciencias_humanas.csv")
@@ -239,7 +243,7 @@ scores_tbl %>%
 ```{r}
 # adjust color and axis
 p1 <- mydata_longer %>% 
-  filter(student_code %in% c(1:19)) %>% 
+  # filter(student_code %in% c(1:19)) %>% 
   mutate(items = as_factor(items)) %>% 
   ggplot(aes(x = items,
              y = student_code,
