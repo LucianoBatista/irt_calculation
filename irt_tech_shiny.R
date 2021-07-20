@@ -366,13 +366,19 @@ server <- function(input, output, session) {
         scale_fill_gradient(low = "#081A40", high = "#F24C3D") +
         labs(
           title = "Classificação dos estudantes por score",
-          y = "Nome dos estudantes",
+          y = "",
           x = "Scores"
         ) +
         guides(
           fill = F
         ) +
-        theme_minimal()
+        theme_void() +
+        theme(
+          axis.text.y = element_text(size = 14, hjust = 1, family = "Fira Sans"),
+          axis.title = element_text(size = 14, family = "Fira Sans"),
+          plot.title = element_text(size = 14, family = "Fira Sans")
+        )
+        
       
     } else {
       scores_tbl %>% 
@@ -396,13 +402,18 @@ server <- function(input, output, session) {
         scale_fill_gradient(low = "#081A40", high = "#F24C3D") +
         labs(
           title = "Classificação dos estudantes por score",
-          y = "Nome dos estudantes",
+          y = "",
           x = "Scores"
         ) +
         guides(
           fill = F
         ) +
-        theme_minimal()
+        theme_void() +
+        theme(
+          axis.text.y = element_text(size = 14, hjust = 1, family = "Fira Sans"),
+          axis.title = element_text(size = 14, family = "Fira Sans"),
+          plot.title = element_text(size = 14, family = "Fira Sans")
+        )
     }
   },
   height = 600
@@ -446,7 +457,13 @@ server <- function(input, output, session) {
         guides(
           fill = F
         ) +
-        theme_minimal()
+        theme_void() +
+        theme(
+          axis.text.y = element_text(size = 14, hjust = 1, family = "Fira Sans"),
+          axis.title = element_text(size = 14, family = "Fira Sans"),
+          plot.title = element_text(size = 14, family = "Fira Sans")
+        )
+      
     } else {
       items_longer_format %>% 
         # filter(student_code %in% c(1:max_n)) %>% 
@@ -479,7 +496,12 @@ server <- function(input, output, session) {
         guides(
           fill = F
         ) +
-        theme_minimal()
+        theme_void() +
+        theme(
+          axis.text.y = element_text(size = 14, hjust = 1, family = "Fira Sans"),
+          axis.title = element_text(size = 14, family = "Fira Sans"),
+          plot.title = element_text(size = 14, family = "Fira Sans")
+        )
     }
     },
     height = 600
