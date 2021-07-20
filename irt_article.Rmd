@@ -159,6 +159,8 @@ day_1_lenguages_humans_science_tbl <- day_1_lenguages_humans_science_raw_tbl %>%
 day_1_lenguages_humans_science_final_tbl <- day_1_lenguages_humans_science_tbl %>% 
   dplyr::select(starts_with("item"))
 
+day_1_lenguages_humans_science_tbl %>% write_csv("lenguages_human_science_example.csv")
+
 # salvando a lista de ids dos estudantes
 student_vect <- day_1_lenguages_humans_science_tbl %>% 
   pluck(2)
@@ -242,15 +244,33 @@ scores_tbl %>%
 
 ```{r}
 # adjust color and axis
+
+top_10 <- scores_tbl %>% 
+  mutate(student_id = student_id %>% as_factor()) %>% 
+  arrange(desc(score)) %>% 
+  top_n(10) %>% 
+  pluck(1)
+
+library(echarts4r)
+
+mydata_longer %>% 
+  filter(student_code %in% top_10) %>% 
+  e_charts(items) %>% 
+  e_heatmap(student_code, count) %>% 
+  e_visual_map(count) %>% 
+  e_title("Heatmap") %>% 
+  e_tooltip(trigger = "item")
+
+
 p1 <- mydata_longer %>% 
-  # filter(student_code %in% c(1:19)) %>% 
+  filter(student_code %in% top_10) %>% 
   mutate(items = as_factor(items)) %>% 
   ggplot(aes(x = items,
              y = student_code,
              fill = count == 1)) +
-  geom_raster() +
-  scale_fill_manual(values = c("#e0e0e0", "orange")) +
-  scale_y_discrete(name="Students", limits=c(1:19)) +
+  geom_tile() +
+  # scale_fill_manual(values = c("#e0e0e0", "orange")) +
+  scale_y_discrete(name="Students", limits=c(2000:2100)) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle=45)

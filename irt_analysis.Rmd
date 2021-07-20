@@ -234,6 +234,17 @@ scores_tbl %>%
 
 ```{r}
 # adjust color and axis
+top_10 <- scores_tbl %>% 
+  arrange(desc())
+
+mydata_longer %>% 
+  filter(student_code %in% top_10) %>% 
+  e_charts(items) %>% 
+  e_heatmap(student_code, count) %>% 
+  e_visual_map(count) %>% 
+  e_title("Heatmap") %>% 
+  e_tooltip(trigger = "item")
+
 p1 <- mydata_longer %>% 
   filter(student_code %in% c(1:19)) %>% 
   mutate(items = as_factor(items)) %>% 
